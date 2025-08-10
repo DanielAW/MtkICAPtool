@@ -1,8 +1,8 @@
 # Prerequisites
-* docker.io
+* install docker.io package
 
 # Setup
-docker build -t ndk .
+* `docker build -t ndk .`
 
 # Compiling
-docker run -v "$PWD":/usr/src/myapp -w /usr/src/myapp --rm ndk:latest make
+* `docker run -v "$PWD":/usr/src/myapp -w /usr/src/myapp --rm ndk:latest make`

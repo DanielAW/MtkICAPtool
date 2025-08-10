@@ -57,10 +57,7 @@
 #define OID_CUSTOM_MEM_DUMP                             0xFFA0C807
 
 #define MAX_ANTENNA_NUM 1
-//#define ICAP_SIZE       (15363)
 #define ICAP_SIZE       (122904)
-//IQ_FORMAT_T rRawData[MAX_ANTENNA_NUM][IQ_NUM][ICAP_SIZE];
-//uint32_t rRawData[IQ_NUM][ICAP_SIZE];
 IQ_FORMAT_T rRawData[IQ_NUM][ICAP_SIZE];
 int my_socket;
 char ifname[] = "wlan0";
@@ -100,8 +97,6 @@ struct _mtk_util_iwreq_memdump {
     } d;
     union iwreq_data u;
     uint8_t buffer;
-//    uint32_t u4Address;
-//    uint32_t u4Lenght;
 }__attribute__((packed));
 
 struct HQA_CMD_FRAME {
@@ -401,9 +396,6 @@ WIFI_TEST_GetIcapDataFragment(int32_t u4WF, uint32_t u4IQ, uint32_t *pu4Len, uin
 
     struct HQA_CMD_FRAME HqaCmdFrame;
 
-    //printf("Enter WIFI_TEST_GetIcapDataFragment()\n");
-
-
     memset(&HqaCmdFrame, 0, sizeof(struct HQA_CMD_FRAME));
 
     /* zeroize */
@@ -515,6 +507,7 @@ WIFI_TEST_GetIcapData() {
 
     /* ------ < / SEND VIA TCP > --------- */
 
+    // For debugging:
     /*
     for (unsigned int i = 0; i < IQNumberTotalCount; i++) {
         printf("\tIQ Data[%3d]: %+04d\t%+04d\t\n", i,
@@ -531,40 +524,6 @@ WIFI_TEST_GetIcapData() {
 }
         
 
-int
-WIFI_TEST_SetJMode(uint32_t jModeSetting) {
-    int ret;
-    struct iwreq wrq;
-    NDIS_TRANSPORT_STRUCT rNdisStruct;
-    P_PARAM_MTK_WIFI_TEST_STRUC_T prTestStruct;
-    int s;
-
-    prTestStruct = (P_PARAM_MTK_WIFI_TEST_STRUC_T)rNdisStruct.ndisOidContent;
-
-    /* zeroize */
-    memset(&wrq, 0, sizeof(struct iwreq));
-
-    /* configure TEST_STRUCT */
-    prTestStruct->u4FuncIndex = RF_AT_FUNCID_SET_J_MODE_SETTING;
-    prTestStruct->u4FuncData = jModeSetting;
-
-    /* configure NDIS_TRANSPORT_STRUC */
-    rNdisStruct.ndisOidCmd = OID_CUSTOM_MTK_WIFI_TEST_;
-    rNdisStruct.inNdisOidlength = sizeof(PARAM_MTK_WIFI_TEST_STRUC_T);
-    rNdisStruct.outNdisOidLength = sizeof(PARAM_MTK_WIFI_TEST_STRUC_T);
-
-    /* configure struct iwreq */
-    wrq.u.data.pointer = &rNdisStruct;
-    wrq.u.data.length = sizeof(NDIS_TRANSPORT_STRUCT);
-    wrq.u.data.flags = PRIV_CMD_OID;
-
-    snprintf(wrq.ifr_name, sizeof(wrq.ifr_name), "%s", ifname);
-    ret = ioctl(my_socket, IOCTL_SET_STRUCT, &wrq);
-    printf("ioctl ret: %d\n", ret);
-
-    return ret;
-}
-
 int icap_forever(P_ICAP_CTRL_T prIcapCtrl) {
         uint16_t u2Status;
         uint16_t u2WaitTime = 0;
@@ -576,15 +535,12 @@ int icap_forever(P_ICAP_CTRL_T prIcapCtrl) {
 	    if (ret == 0) return 1;
 
 	    if (!u2Status) {  // ICAP done
-		//WIFI_TEST_RxStop();
 		break;
 	    }
 
 	    if (u2WaitTime++ < ICAP_TIMEOUT) {
-                //printf("working...%d\n", u2WaitTime);
 		//sleep(1);  // 1 sec
 	    } else {
-		//printf("timeout\n");
 		return 1;
 	    }
         }
@@ -595,12 +551,10 @@ int icap_forever(P_ICAP_CTRL_T prIcapCtrl) {
 }
 
 int main(int argc, char *argv[]) {
-    /*
     if(argc != 2) {
         printf("please provide correct arguments\n");
         exit(1);
     }
-    */
 
     //
     // Start Test Mode
@@ -758,227 +712,6 @@ int main(int argc, char *argv[]) {
 	printf("errno str: %s\n", strerror(errno));
         
         WIFI_TEST_deinit();
-    }
-    //
-    // Stop ICAP and Test Mode
-    //
-    else if(strcmp(argv[1], "-i3") == 0) {
-        int ret = 0;
-        struct iwreq wrq;
-        NDIS_TRANSPORT_STRUCT rNdisStruct;
-        ICAP_CTRL_T prIcapCtrl;
-
-        prIcapCtrl.i4Channel = 1;
-        prIcapCtrl.u4Cbw = WIFI_TEST_CH_BW_20MHZ;
-        prIcapCtrl.u4BwMhz = 20;
-        prIcapCtrl.u4RxPath = 0x1;
-
-        WIFI_TEST_init();
-
-        //Stop ICAP
-        ret = WIFI_TEST_SetIcapStartStop(&prIcapCtrl, 0);
-
-        /* zeroize */
-        memset(&wrq, 0, sizeof(struct iwreq));
-        rNdisStruct.ndisOidCmd = OID_CUSTOM_ABORT_TEST_MODE;
-
-        rNdisStruct.inNdisOidlength = 0;
-        rNdisStruct.outNdisOidLength = 0;
-
-        /* configure struct iwreq */
-        wrq.u.data.pointer = &rNdisStruct;
-        wrq.u.data.length = sizeof(NDIS_TRANSPORT_STRUCT);
-        wrq.u.data.flags = PRIV_CMD_OID;
-
-        snprintf(wrq.ifr_name, sizeof(wrq.ifr_name), "%s", ifname);
-	
-        ret = ioctl(my_socket, IOCTL_SET_STRUCT, &wrq);
-
-	printf("ioctl STOP TEST MODE ret: %d\n", ret);
-        WIFI_TEST_deinit();
-    } 
-    //
-    // Query Log Level Support
-    //
-    else if(strcmp(argv[1], "-ql") == 0) {
-        int ret = 0;
-        struct iwreq wrq;
-        struct PARAM_WIFI_LOG_LEVEL *logLevel;
-        NDIS_TRANSPORT_STRUCT rNdisStruct;
-
-        WIFI_TEST_init();
-
-        logLevel = (struct PARAM_WIFI_LOG_LEVEL *)rNdisStruct.ndisOidContent;
-
-        /* zeroize */
-        memset(&wrq, 0, sizeof(struct iwreq));
-
-        logLevel->u4Version = 1;
-        logLevel->u4Module = 1; //0: Driver, 1: FW
-        logLevel->u4Level = 0;
-
-        rNdisStruct.ndisOidCmd = OID_IPC_WIFI_LOG_UI;
-        rNdisStruct.inNdisOidlength = sizeof(struct PARAM_WIFI_LOG_LEVEL_UI);
-        rNdisStruct.outNdisOidLength = sizeof(struct PARAM_WIFI_LOG_LEVEL_UI);
-
-        /* configure struct iwreq */
-        wrq.u.data.pointer = &rNdisStruct;
-        wrq.u.data.length = sizeof(NDIS_TRANSPORT_STRUCT);
-        wrq.u.data.flags = PRIV_CMD_OID;
-
-        snprintf(wrq.ifr_name, sizeof(wrq.ifr_name), "%s", ifname);
-	
-        ret = ioctl(my_socket, IOCTL_GET_STRUCT, &wrq);
-
-	printf("ioctl QUERY LOG LEVEL ret: %d\n", ret);
-        WIFI_TEST_deinit();
-
-    }
-    //
-    // Get Log Level
-    //
-    else if(strcmp(argv[1], "-l") == 0) {
-        int ret = 0;
-        struct iwreq wrq;
-        NDIS_TRANSPORT_STRUCT rNdisStruct;
-        struct PARAM_WIFI_LOG_LEVEL *logLevel;
-
-        WIFI_TEST_init();
-
-        logLevel = (struct PARAM_WIFI_LOG_LEVEL *)rNdisStruct.ndisOidContent;
-
-        /* zeroize */
-        memset(&wrq, 0, sizeof(struct iwreq));
-
-        logLevel->u4Version = 1;
-        logLevel->u4Module = 1; //0: Driver, 1: FW
-        logLevel->u4Level = 0;
-
-        rNdisStruct.ndisOidCmd = OID_IPC_WIFI_LOG_LEVEL;
-        rNdisStruct.inNdisOidlength = sizeof(struct PARAM_WIFI_LOG_LEVEL);
-        rNdisStruct.outNdisOidLength = sizeof(struct PARAM_WIFI_LOG_LEVEL);
-
-        /* configure struct iwreq */
-        wrq.u.data.pointer = &rNdisStruct;
-        wrq.u.data.length = sizeof(NDIS_TRANSPORT_STRUCT);
-        wrq.u.data.flags = PRIV_CMD_OID;
-
-        snprintf(wrq.ifr_name, sizeof(wrq.ifr_name), "%s", ifname);
-	
-        ret = ioctl(my_socket, IOCTL_GET_STRUCT, &wrq);
-
-	printf("ioctl GET LOG LEVEL ret: %d\n", ret);
-        WIFI_TEST_deinit();
-
-    }
-    //
-    // Set Log Level
-    //
-    else if(strcmp(argv[1], "-sl") == 0) {
-        int ret = 0;
-        struct iwreq wrq;
-        struct PARAM_WIFI_LOG_LEVEL *logLevel;
-        NDIS_TRANSPORT_STRUCT rNdisStruct;
-
-        WIFI_TEST_init();
-    
-        logLevel = (struct PARAM_WIFI_LOG_LEVEL *)rNdisStruct.ndisOidContent;
-
-        /* zeroize */
-        memset(&wrq, 0, sizeof(struct iwreq));
-
-        logLevel->u4Version = 1;
-        logLevel->u4Module = 0; //0: Driver, 1: FW
-        logLevel->u4Level = 2; //1: More, 2: Extreme
-
-        rNdisStruct.ndisOidCmd = OID_IPC_WIFI_LOG_LEVEL;
-        rNdisStruct.inNdisOidlength = sizeof(struct PARAM_WIFI_LOG_LEVEL);
-        rNdisStruct.outNdisOidLength = sizeof(struct PARAM_WIFI_LOG_LEVEL);
-
-        /* configure struct iwreq */
-        wrq.u.data.pointer = &rNdisStruct;
-        wrq.u.data.length = sizeof(NDIS_TRANSPORT_STRUCT);
-        wrq.u.data.flags = PRIV_CMD_OID;
-
-        snprintf(wrq.ifr_name, sizeof(wrq.ifr_name), "%s", ifname);
-	
-        ret = ioctl(my_socket, IOCTL_SET_STRUCT, &wrq);
-
-	printf("ioctl SET LOG LEVEL ret: %d\n", ret);
-        WIFI_TEST_deinit();
-
-    }
-    //
-    // Dump Memory
-    // 
-    else if(strcmp(argv[1], "-d") == 0) {
-        int ret = 0;
-        struct iwreq wrq;
-        struct PARAM_CUSTOM_MEM_DUMP_STRUCT *memDump;
-        NDIS_TRANSPORT_STRUCT rNdisStruct;
-        char *endptr;
-
-        WIFI_TEST_init();
-    
-        memDump = (struct PARAM_CUSTOM_MEM_DUMP_STRUCT *)rNdisStruct.ndisOidContent;
-
-        /* zeroize */
-        memset(&wrq, 0, sizeof(struct iwreq));
-
-        memDump->u4Address = (unsigned)strtoul(argv[2], &endptr, 16);
-        memDump->u4Length = (unsigned)strtoul(argv[3], &endptr, 16);
-
-        rNdisStruct.ndisOidCmd = OID_CUSTOM_MEM_DUMP;
-        rNdisStruct.inNdisOidlength = sizeof(struct PARAM_CUSTOM_MEM_DUMP_STRUCT);
-        rNdisStruct.outNdisOidLength = sizeof(struct PARAM_CUSTOM_MEM_DUMP_STRUCT);
-
-        /* configure struct iwreq */
-        wrq.u.data.pointer = &rNdisStruct;
-        wrq.u.data.length = sizeof(NDIS_TRANSPORT_STRUCT);
-        wrq.u.data.flags = PRIV_CMD_OID;
-
-        snprintf(wrq.ifr_name, sizeof(wrq.ifr_name), "%s", ifname);
-	
-        ret = ioctl(my_socket, IOCTL_GET_STRUCT, &wrq);
-
-	printf("ioctl DUMP MEM ret: %d\n", ret);
-        WIFI_TEST_deinit();
-    }
-    //
-    // Print Log
-    // 
-    else if(strcmp(argv[1], "-p") == 0) {
-
-        int fd;
-        int ret;
-        struct pollfd pfd;
-        char fw_console[4096];
-
-        fd = open("/dev/fw_log_wifi", O_RDWR | O_NONBLOCK);
-
-        pfd.fd = fd;
-        pfd.events = ( POLLIN | POLLRDNORM );
-
-        if( fd == -1 ) {
-            printf("fd open error\n");
-            exit(1);
-        }
-
-        while(1) {
-            ret = poll(&pfd, (unsigned long)1, 100);   //wait for 5secs
-        
-            if( ret < 0 ) {
-                printf("poll error\n");
-                exit(1);
-            }
-
-            if( ( pfd.revents & POLLIN )  == POLLIN ) {
-                read(pfd.fd, &fw_console, sizeof(fw_console));
-                //printf("FW Console: '%s'\n", fw_console);
-                hexdump(NULL, &fw_console, sizeof(fw_console));
-                printf("\n\n");
-            }
-        }
     } else {
         printf("unkown paramter!\n");
     }
