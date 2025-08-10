@@ -25,3 +25,6 @@ run:
 	sudo adb shell 'su -c "icaptool -i1"'
 	sudo adb shell 'su -c "icaptool -i11"'
 	sudo adb shell 'su -c "icaptool -i2"'
+
+stop:
+	sudo adb shell 'su -c "icaptool -i3"'
