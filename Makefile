@@ -7,7 +7,7 @@ CFLAGS = -fPIE \
 
 all: icaptool 
 
-mtkutil: icaptool.c
+icaptool: icaptool.c
 	$(NDK_ROOT)/ndk-build NDK_APPLICATION_MK=`pwd`/Application.mk NDK_APP_OUT=. TARGET_PLATFORM=android-24
 
 install: 
