@@ -13,9 +13,9 @@ icaptool: icaptool.c
 install: 
 #	sudo adb shell 'su -c "mount -o rw,remount /system"'
 	sudo adb shell 'su -mm -c magic_remount_rw'
-	sudo adb push libs/arm64-v8a/mtkutil /sdcard/
-	sudo adb shell 'su -c "cp /sdcard/mtkutil /system/bin/mtkutil"'
-	sudo adb shell 'su -c "chmod +x /system/bin/mtkutil"'
+	sudo adb push libs/arm64-v8a/icaptool /sdcard/
+	sudo adb shell 'su -c "cp /sdcard/icaptool /system/bin/icaptool"'
+	sudo adb shell 'su -c "chmod +x /system/bin/icaptool"'
 
 reload:
 	sudo adb shell 'su -c "echo 0 > /dev/wmtWifi"'
