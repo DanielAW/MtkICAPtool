@@ -1,11 +1,13 @@
-CC=/usr/lib/android-ndk/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/arm-linux-androideabi-
 NDK_TARGETVER=24
 NDK_INCLUDES = -I/usr/lib/android-ndk/platforms/android-24/arch-arm64/usr/include
 CFLAGS = -fPIE \
 	 -Wall \
 	 $(NDK_INCLUDES)
 
-all: mtkutil
+all: icaptool 
+
+mtkutil: icaptool.c
+	$(NDK_ROOT)/ndk-build NDK_APPLICATION_MK=`pwd`/Application.mk NDK_APP_OUT=. TARGET_PLATFORM=android-24
 
 install: 
 #	sudo adb shell 'su -c "mount -o rw,remount /system"'
@@ -19,6 +21,6 @@ reload:
 	sudo adb shell 'su -c "echo 1 > /dev/wmtWifi"'
 
 run:
-	sudo adb shell 'su -c "mtkutil -i1"'
-	sudo adb shell 'su -c "mtkutil -i11"'
-	sudo adb shell 'su -c "mtkutil -i2"'
+	sudo adb shell 'su -c "icaptool -i1"'
+	sudo adb shell 'su -c "icaptool -i11"'
+	sudo adb shell 'su -c "icaptool -i2"'

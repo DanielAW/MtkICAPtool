@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "mtkutil.h"
+#include "icaptool.h"
 #include "tcp_packet.h"
 
 #define IFNAMSIZ 16
