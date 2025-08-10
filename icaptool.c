@@ -712,6 +712,41 @@ int main(int argc, char *argv[]) {
 	printf("errno str: %s\n", strerror(errno));
         
         WIFI_TEST_deinit();
+    }
+    else if(strcmp(argv[1], "-i3") == 0) {
+        int ret = 0;
+        struct iwreq wrq;
+        NDIS_TRANSPORT_STRUCT rNdisStruct;
+        ICAP_CTRL_T prIcapCtrl;
+
+        prIcapCtrl.i4Channel = 1;
+        prIcapCtrl.u4Cbw = WIFI_TEST_CH_BW_20MHZ;
+        prIcapCtrl.u4BwMhz = 20;
+        prIcapCtrl.u4RxPath = 0x1;
+
+        WIFI_TEST_init();
+
+        //Stop ICAP
+        ret = WIFI_TEST_SetIcapStartStop(&prIcapCtrl, 0);
+
+        /* zeroize */
+        memset(&wrq, 0, sizeof(struct iwreq));
+        rNdisStruct.ndisOidCmd = OID_CUSTOM_ABORT_TEST_MODE;
+
+        rNdisStruct.inNdisOidlength = 0;
+        rNdisStruct.outNdisOidLength = 0;
+
+        /* configure struct iwreq */
+        wrq.u.data.pointer = &rNdisStruct;
+        wrq.u.data.length = sizeof(NDIS_TRANSPORT_STRUCT);
+        wrq.u.data.flags = PRIV_CMD_OID;
+
+        snprintf(wrq.ifr_name, sizeof(wrq.ifr_name), "%s", ifname);
+	
+        ret = ioctl(my_socket, IOCTL_SET_STRUCT, &wrq);
+
+	printf("ioctl STOP TEST MODE ret: %d\n", ret);
+        WIFI_TEST_deinit();
     } else {
         printf("unkown paramter!\n");
     }
