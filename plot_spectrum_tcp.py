@@ -5,6 +5,8 @@ from matplotlib.animation import FuncAnimation
 import socket
 import struct
 
+# Disclaimer: this is mostly AI slop
+
 # Constants
 BUFFER_SIZE = 500    # Number of rows in waterfall
 FFT_SIZE = 1024    # FFT size for better resolution
