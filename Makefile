@@ -1,3 +1,4 @@
+CC=/usr/lib/android-ndk/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/arm-linux-androideabi-
 NDK_TARGETVER=24
 NDK_INCLUDES = -I/usr/lib/android-ndk/platforms/android-24/arch-arm64/usr/include
 CFLAGS = -fPIE \
