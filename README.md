@@ -1,4 +1,4 @@
-Tested on Realme 6i (RMX2040) running Android 11 using mt6769
+Tested on Realme 6i (RMX2040) running Android 11 using mt6769. Parts taken from the Mediatek "wifitesttool".
 
 # Build
 * Export NDK (Ubuntu 18.04 in this case)
